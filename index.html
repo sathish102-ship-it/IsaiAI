@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>IsaiAI — Mobile Music Studio</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <div><h1>IsaiAI</h1><p>Mobile AI Music Studio</p></div>
+  <span id="modeBadge">PHONE ONLY</span>
+</header>
+
+<main>
+<section class="card hero">
+  <div class="eyebrow">SONG CREATOR</div>
+  <h2>Turn your lyrics into a song</h2>
+  <p>Enter lyrics, choose the sound, then generate from your phone.</p>
+</section>
+
+<section class="card">
+  <div class="step"><b>1</b><span>Song details</span></div>
+  <div class="grid">
+    <label>Mode<select id="mode"><option value="custom">Custom</option><option value="simple">Simple</option></select></label>
+    <label>Language<select id="language"><option>Tamil</option><option>English</option><option>Hindi</option><option>Telugu</option><option>Malayalam</option><option>Kannada</option></select></label>
+  </div>
+  <label>Song title<input id="title" placeholder="e.g. ஓடி ஓடி வந்தோம் ஐயப்பா"></label>
+  <label>Lyrics<textarea id="lyrics" rows="10" placeholder="[Pallavi]
+உங்கள் பாடல் வரிகள்...
+
+[Charanam 1]
+...
+
+[Charanam 2]
+..."></textarea></label>
+</section>
+
+<section class="card">
+  <div class="step"><b>2</b><span>Music direction</span></div>
+  <label>Style / Music prompt<textarea id="style" rows="5" placeholder="Tamil devotional fusion, strong natural male vocal, veena, mridangam, nadaswaram, no flute, organic temple ambience"></textarea></label>
+  <div class="grid three">
+    <label>Vocal<select id="vocal"><option>Male</option><option>Female</option><option>Auto</option></select></label>
+    <label>BPM<input id="bpm" type="number" min="40" max="220" value="85"></label>
+    <label>Duration<select id="duration"><option value="120">2 min</option><option value="180" selected>3 min</option><option value="240">4 min</option><option value="300">5 min</option></select></label>
+  </div>
+</section>
+
+<section class="card">
+  <div class="step"><b>3</b><span>Generate</span></div>
+  <div id="status" class="status ready">Ready to generate.</div>
+  <div class="actions">
+    <button id="generateBtn" class="primary">Generate Song</button>
+    <button id="copyBtn" class="secondary">Copy Prompt</button>
+  </div>
+  <p id="providerNote" class="note">Direct API: not configured. The hosted ACE-Step option works from your phone without a laptop.</p>
+  <button id="hostedBtn" class="hosted">Open Hosted ACE-Step</button>
+</section>
+
+<section id="resultCard" class="card hidden">
+  <div class="step"><b>✓</b><span>Song result</span></div>
+  <audio id="player" controls></audio>
+  <a id="download" class="download" download>Download MP3</a>
+</section>
+
+<section class="card">
+  <div class="step"><b>4</b><span>My Songs</span></div>
+  <div id="songs"></div>
+</section>
+
+<section class="card">
+  <details>
+    <summary>Cloud API settings</summary>
+    <p class="note">Use this only when you have a real hosted generation endpoint. The endpoint must accept the IsaiAI JSON request and return an audio URL.</p>
+    <label>Generate endpoint<input id="endpoint" placeholder="https://your-cloud-api.example/generate"></label>
+    <label>API key<input id="apiKey" type="password" placeholder="Optional"></label>
+    <button id="save" class="secondary">Save on this phone</button>
+  </details>
+</section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
