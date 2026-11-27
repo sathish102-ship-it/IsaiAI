@@ -1,24 +1,21 @@
-# IsaiAI Mobile v4
+# IsaiAI Mobile v5
 
-Phone-only PWA for IsaiKuviyal.
+Mobile-first PWA for personal AI music generation.
 
-## Current behavior
+## What changed from v4
+- Generate Song no longer redirects to ACE Music.
+- Direct MusicAPI Sonic integration.
+- Custom lyrics mode with title, style tags, vocal gender and target duration.
+- Async task polling with progress/status.
+- MP3 player and open/download link.
+- API key is stored only in this browser's local storage.
+- No fake/demo audio.
 
-1. Enter Tamil/other-language lyrics.
-2. Choose vocal, BPM, duration and style.
-3. Tap Generate Song.
-4. If a real cloud generation endpoint is configured, IsaiAI calls it and plays the returned MP3.
-5. If no endpoint is configured, IsaiAI copies the complete prompt and opens hosted ACE-Step in the phone browser.
-6. Generated audio URLs are saved in My Songs.
+## Free trial
+MusicAPI currently advertises 75 free trial credits for new accounts with no card required. Sonic generation costs 20 credits per call, so the trial is enough for several test generations. Verify current terms before use.
 
-## No laptop required
+## Important security note
+This GitHub Pages version is for personal testing. The API key is entered on your phone and stored in browser local storage. Do not publish the key in GitHub files or share the key.
 
-The app itself is static and mobile-first. It does not require a local GPU, Python installation or local server.
-
-## Important limitation
-
-There is currently no verified free public ACE Music API endpoint that we can safely embed. ACE Music's official help currently says new API-key sign-ups are paused. ACE-Step 1.5 has an official REST API, but it is for an ACE-Step service you run. So v4 deliberately keeps the cloud provider swappable.
-
-## Deployment
-
-Host the static files on a static host and open the URL on Android. PWA installation is supported by compatible browsers.
+## If browser CORS blocks direct API calls
+Use the included `backend/` Cloudflare Worker as a proxy. The worker keeps the API key server-side. Deploy it to a serverless provider and put the worker URL into the app in a future configuration update.

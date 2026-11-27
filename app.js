@@ -1,102 +1,19 @@
 const $=id=>document.getElementById(id);
-const HOSTED="https://acemusic.ai/ace-step/";
-const KEY="isai_v4_songs";
-let songs=JSON.parse(localStorage.getItem(KEY)||"[]");
-
-$("endpoint").value=localStorage.getItem("isai_v4_endpoint")||"";
-$("apiKey").value=localStorage.getItem("isai_v4_key")||"";
-
-function payload(){
- return {
-  title:$("title").value.trim(),
-  lyrics:$("lyrics").value.trim(),
-  style:$("style").value.trim(),
-  language:$("language").value,
-  vocal:$("vocal").value,
-  bpm:Number($("bpm").value||85),
-  duration:Number($("duration").value||180),
-  mode:$("mode").value
- };
-}
-function promptFor(p){
- return `${p.style}
-Language: ${p.language}
-Vocal: ${p.vocal}
-Tempo: ${p.bpm} BPM
-Target duration: about ${Math.round(p.duration/60)} minutes
-Mode: ${p.mode}
-
-TITLE:
-${p.title}
-
-LYRICS:
-${p.lyrics}`;
-}
-function setStatus(msg,type="ready"){
- $("status").textContent=msg;
- $("status").className="status "+type;
-}
-async function copyPrompt(){
- const p=payload();
- if(!p.title||!p.lyrics){setStatus("Enter a title and lyrics first.","error");return}
- await navigator.clipboard.writeText(promptFor(p));
- setStatus("Full song prompt copied to clipboard.","success");
-}
-$("copyBtn").onclick=copyPrompt;
-
-async function generate(){
- const p=payload();
- if(!p.title||!p.lyrics){setStatus("Enter a title and lyrics first.","error");return}
- const endpoint=localStorage.getItem("isai_v4_endpoint")||"";
- if(!endpoint){
-   setStatus("No direct API is configured. Opening hosted ACE-Step instead.","working");
-   await copyPrompt();
-   saveSong(p,null,"Hosted ACE-Step");
-   setTimeout(()=>window.open(HOSTED,"_blank"),350);
-   return;
- }
- setStatus("Submitting your song to the cloud AI...","working");
- $("generateBtn").disabled=true;
- try{
-   const headers={"Content-Type":"application/json"};
-   const key=localStorage.getItem("isai_v4_key");
-   if(key) headers.Authorization="Bearer "+key;
-   const r=await fetch(endpoint,{method:"POST",headers,body:JSON.stringify(p)});
-   if(!r.ok) throw new Error("HTTP "+r.status);
-   const data=await r.json();
-   const audio=data.audio_url||data.url||data.audioUrl;
-   if(!audio) throw new Error("The API did not return audio_url.");
-   showAudio(audio);
-   saveSong(p,audio,"Cloud API");
-   setStatus("Song generated successfully.","success");
- }catch(e){
-   setStatus("Generation failed: "+e.message,"error");
- }finally{
-   $("generateBtn").disabled=false;
- }
-}
-function showAudio(url){
- $("resultCard").classList.remove("hidden");
- $("player").src=url;
- $("download").href=url;
-}
-function saveSong(p,audio,provider){
- songs.unshift({title:p.title,date:new Date().toLocaleString(),audio,provider,prompt:promptFor(p)});
- songs=songs.slice(0,30);
- localStorage.setItem(KEY,JSON.stringify(songs));
- render();
-}
-function render(){
- if(!songs.length){$("songs").innerHTML="<p class='note'>No songs yet.</p>";return}
- $("songs").innerHTML=songs.map((s,i)=>`<div class="song">
-<strong>${esc(s.title)}</strong><small>${esc(s.date)} · ${esc(s.provider)}</small>
-${s.audio?`<a href="#" onclick="playSaved(${i});return false">Play</a><a href="${escAttr(s.audio)}" download>Download</a>`:`<a href="#" onclick="navigator.clipboard.writeText(${JSON.stringify(s.prompt)});return false">Copy prompt</a>`}
-</div>`).join("");
-}
-window.playSaved=i=>{const s=songs[i];if(s.audio){showAudio(s.audio);$("player").scrollIntoView({behavior:"smooth"});}};
-function esc(x){return String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
-function escAttr(x){return esc(x)}
-$("generateBtn").onclick=generate;
-$("hostedBtn").onclick=async()=>{const p=payload();if(!p.title||!p.lyrics){setStatus("Enter a title and lyrics first.","error");return}await copyPrompt();saveSong(p,null,"Hosted ACE-Step");window.open(HOSTED,"_blank")};
-$("save").onclick=()=>{localStorage.setItem("isai_v4_endpoint",$("endpoint").value.trim());localStorage.setItem("isai_v4_key",$("apiKey").value);setStatus("Cloud API settings saved on this phone.","success")};
-render();
+const KEY='isai_v5_songs'; const API='https://api.musicapi.ai/api/v1/sonic';
+let songs=JSON.parse(localStorage.getItem(KEY)||'[]');
+$('apiKey').value=localStorage.getItem('isai_v5_key')||'';
+function payload(){return{title:$('title').value.trim(),lyrics:$('lyrics').value.trim(),style:$('style').value.trim(),language:$('language').value,vocal:$('vocal').value,bpm:Number($('bpm').value||85),duration:Number($('duration').value||180),mode:$('mode').value};}
+function tags(p){return [p.style,p.language+' lyrics',p.bpm+' BPM',p.vocal==='Auto'?'natural vocal':p.vocal.toLowerCase()+' vocal'].filter(Boolean).join(', ');}
+function fullPrompt(p){return `${p.style}\nLanguage: ${p.language}\nVocal: ${p.vocal}\nTempo: ${p.bpm} BPM\nTarget duration: ${p.duration}s\n\nTITLE:\n${p.title}\n\nLYRICS:\n${p.lyrics}`;}
+function setStatus(m,t=''){ $('status').textContent=m; $('status').className='status '+t; }
+function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function save(){localStorage.setItem('isai_v5_key',$('apiKey').value.trim());setStatus('API key saved on this phone.','success');}
+$('save').onclick=save;
+$('copyBtn').onclick=async()=>{const p=payload();if(!p.title||!p.lyrics){setStatus('Enter a title and lyrics first.','error');return}await navigator.clipboard.writeText(fullPrompt(p));setStatus('Full prompt copied.','success');};
+async function generate(){const p=payload();const key=localStorage.getItem('isai_v5_key')||$('apiKey').value.trim();if(!p.title||!p.lyrics){setStatus('Enter a title and lyrics first.','error');return}if(!key){setStatus('Add your MusicAPI key in Cloud API settings first. No key is sent anywhere until you press Generate.','error');$('apiKey').scrollIntoView({behavior:'smooth'});return}if(p.lyrics.length>5000){setStatus('Lyrics are over the 5,000-character custom-mode limit.','error');return}$('generateBtn').disabled=true;setStatus('Submitting to MusicAPI...','working');try{const body={task_type:'create_music',custom_mode:p.mode==='Custom',mv:'sonic-v6',title:p.title,tags:tags(p),prompt:p.lyrics,duration:p.duration};if(p.vocal==='Female')body.vocal_gender='f';if(p.vocal==='Male')body.vocal_gender='m';if(p.mode==='Simple'){delete body.prompt;body.custom_mode=false;body.gpt_description_prompt=fullPrompt(p).slice(0,400);}const r=await fetch(API+'/create',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw new Error(data.error||data.message||('HTTP '+r.status));const taskId=data.task_id||data.data?.task_id;if(!taskId)throw new Error('No task_id returned.');await poll(taskId,p,key);}catch(e){setStatus('Generation failed: '+e.message,'error');}finally{$('generateBtn').disabled=false;}}
+async function poll(taskId,p,key){for(let i=0;i<40;i++){setStatus(`Generating song... ${Math.min(100,Math.round(i/39*100))}%`,'working');await new Promise(r=>setTimeout(r,15000));const r=await fetch(API+'/task/'+encodeURIComponent(taskId),{headers:{Authorization:'Bearer '+key}});const d=await r.json();if(!r.ok)throw new Error(d.error||d.message||('Polling HTTP '+r.status));const items=Array.isArray(d.data)?d.data:[d.data];const song=items.find(Boolean);if(song?.state==='succeeded'&&song.audio_url){showAudio(song.audio_url);saveSong(p,song.audio_url,'MusicAPI Sonic');setStatus('Song generated successfully.','success');return}if(song?.state==='failed')throw new Error(song.message||d.message||'Generation failed');}throw new Error('Generation timed out. Check My Songs or try again.');}
+function showAudio(url){$('resultCard').classList.remove('hidden');$('player').src=url;$('download').href=url;window.scrollTo({top:$('resultCard').offsetTop-20,behavior:'smooth'});}
+function saveSong(p,audio,provider){songs.unshift({title:p.title,date:new Date().toLocaleString(),audio,provider});songs=songs.slice(0,30);localStorage.setItem(KEY,JSON.stringify(songs));render();}
+function render(){if(!songs.length){$('songs').innerHTML='<p class="note">No songs yet.</p>';return}$('songs').innerHTML=songs.map((s,i)=>`<div class="song"><strong>${esc(s.title)}</strong><small>${esc(s.date)} · ${esc(s.provider)}</small><a href="#" onclick="playSaved(${i});return false">Play</a><a href="${esc(s.audio)}" target="_blank" rel="noopener">Open</a></div>`).join('');}
+window.playSaved=i=>{const s=songs[i];showAudio(s.audio);};
+$('generateBtn').onclick=generate; render();
